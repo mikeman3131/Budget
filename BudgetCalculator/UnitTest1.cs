@@ -2,28 +2,25 @@
 using NSubstitute;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace BudgetCalculator
 {
     [TestClass]
     public class BudgetCalculatorTests
     {
-        private BudgetService _bugetService;
+        private BudgetRetriver _bugetService;
         private IBudgetRepository _rpt = Substitute.For<IBudgetRepository>();
         private int _actual = 0;
 
-        private void GivenGetBudget(int year, int month, int money)
-        {
-            _rpt.GetBudget(Arg.Any<int>(), Arg.Any<int>()).Returns(new Budget { Year = year, Month = month, Amount = money });
-        }
+        //private void GivenGetBudget(Budget bg)
+        //{
+        //    _rpt.GetBudget(Arg.Any<int>(), Arg.Any<int>()).Returns(bg);
+        //}
 
-        private void GivenGetBudgets(IEnumerable<Tuple<int, int, int>> parms)
+        private void GivenGetBudgets(IEnumerable<Budget> parms)
         {
-            _rpt.GetBudgets(Arg.Any<IEnumerable<Tuple<int, int>>>())
-                .Returns(
-                    parms.Select(o => new Budget() { Year = o.Item1, Month = o.Item2, Amount = o.Item3 }).ToArray()
-                );
+            _rpt.GetBudgets(Arg.Any<IEnumerable<BudgetSearcher>>())
+                .Returns(parms);
         }
 
         private void ActCalculate(DateTime startDate, DateTime endDate)
@@ -39,13 +36,16 @@ namespace BudgetCalculator
         [TestInitialize]
         public void Initializer()
         {
-            this._bugetService = new BudgetService(this._rpt);
+            this._bugetService = new BudgetRetriver(this._rpt);
         }
 
         [TestMethod]
         public void SingleWholeMonth()
         {
-            GivenGetBudget(2018, 6, 300);
+            GivenGetBudgets(new List<Budget> {
+                new Budget() { Year = 2018, Month = 6, Amount = 300 }
+            });
+            //GivenGetBudget(new Budget() { Year = 2018, Month = 6, Amount = 300 });
 
             ActCalculate(new DateTime(2018, 6, 1), new DateTime(2018, 6, 30));
 
@@ -56,7 +56,10 @@ namespace BudgetCalculator
         [TestMethod]
         public void SignleDay()
         {
-            GivenGetBudget(2018, 6, 300);
+            GivenGetBudgets(new List<Budget> {
+                new Budget() { Year = 2018, Month = 6, Amount = 300 }
+            });
+            //GivenGetBudget(new Budget() { Year = 2018, Month = 6, Amount = 300 });
 
             ActCalculate(new DateTime(2018, 6, 1), new DateTime(2018, 6, 1));
 
@@ -67,7 +70,10 @@ namespace BudgetCalculator
         [TestMethod]
         public void Search_From_20180601_To_20180730()
         {
-            GivenGetBudgets(new List<Tuple<int, int, int>> { Tuple.Create<int, int, int>(2018, 6, 300), Tuple.Create<int, int, int>(2018, 7, 310) });
+            GivenGetBudgets(new List<Budget> {
+                new Budget() {Year= 2018, Month= 6, Amount= 300 },
+                new Budget(){ Year= 2018, Month= 7, Amount= 310 }
+            });
 
             ActCalculate(new DateTime(2018, 6, 1), new DateTime(2018, 7, 30));
 
@@ -77,9 +83,9 @@ namespace BudgetCalculator
         [TestMethod]
         public void Search_From_20180615_To_20180731()
         {
-            GivenGetBudgets(new List<Tuple<int, int, int>> {
-                Tuple.Create<int,int,int>(2018,6,300),
-                Tuple.Create<int,int,int>(2018,7,310)
+            GivenGetBudgets(new List<Budget> {
+                new Budget() {Year= 2018, Month= 6, Amount= 300 },
+                new Budget(){ Year= 2018, Month= 7, Amount= 310 }
             });
 
             ActCalculate(new DateTime(2018, 6, 15), new DateTime(2018, 7, 31));
@@ -90,9 +96,9 @@ namespace BudgetCalculator
         [TestMethod]
         public void Search_From_20180601_To_201808_But_201807DoesnotHaveBudget()
         {
-            GivenGetBudgets(new List<Tuple<int, int, int>> {
-                Tuple.Create<int,int,int>(2018,06,300),
-                Tuple.Create<int,int,int>(2018,8,310)
+            GivenGetBudgets(new List<Budget> {
+                new Budget() {Year= 2018, Month= 6, Amount= 300 },
+                new Budget(){ Year= 2018, Month= 8, Amount= 310 }
             });
 
             ActCalculate(new DateTime(2018, 6, 1), new DateTime(2018, 8, 30));
@@ -103,9 +109,9 @@ namespace BudgetCalculator
         [TestMethod]
         public void Search_From_20180617_To_20180811_But_201807DoesnotHaveBudget()
         {
-            GivenGetBudgets(new List<Tuple<int, int, int>> {
-                Tuple.Create<int,int,int>(2018,06,300),
-                Tuple.Create<int,int,int>(2018,8,310)
+            GivenGetBudgets(new List<Budget> {
+                new Budget() {Year= 2018, Month= 6, Amount= 300 },
+                new Budget(){ Year= 2018, Month= 8, Amount= 310 }
             });
 
             ActCalculate(new DateTime(2018, 6, 17), new DateTime(2018, 8, 11));
@@ -116,8 +122,8 @@ namespace BudgetCalculator
         [TestMethod]
         public void Search_From_20180711_To_20180830_But_201807DoesnotHaveBudget()
         {
-            GivenGetBudgets(new List<Tuple<int, int, int>> {
-                Tuple.Create<int,int,int>(2018,8,310)
+            GivenGetBudgets(new List<Budget> {
+                new Budget(){ Year= 2018, Month= 8, Amount= 310 }
             });
 
             ActCalculate(new DateTime(2018, 7, 11), new DateTime(2018, 8, 30));
@@ -128,8 +134,8 @@ namespace BudgetCalculator
         [TestMethod]
         public void Search_From_20180611_To_20180712_But_201807DoesnotHaveBudget()
         {
-            GivenGetBudgets(new List<Tuple<int, int, int>> {
-                Tuple.Create<int,int,int>(2018,6 ,300)
+            GivenGetBudgets(new List<Budget> {
+                new Budget(){ Year= 2018, Month= 6, Amount= 300 }
             });
 
             ActCalculate(new DateTime(2018, 6, 11), new DateTime(2018, 7, 12));
@@ -140,9 +146,9 @@ namespace BudgetCalculator
         [TestMethod]
         public void Search_From_20180603_To_20200229()
         {
-            GivenGetBudgets(new List<Tuple<int, int, int>> {
-                Tuple.Create<int,int,int>(2018,6 ,300),
-                Tuple.Create<int,int,int>(2020,2,290)
+            GivenGetBudgets(new List<Budget> {
+                new Budget(){ Year= 2018, Month= 6, Amount= 300 },
+                new Budget(){ Year= 2020, Month= 2, Amount= 290 }
             });
 
             ActCalculate(new DateTime(2018, 6, 03), new DateTime(2020, 2, 29));
@@ -154,9 +160,9 @@ namespace BudgetCalculator
         [TestMethod]
         public void StartDateIsGreaterThanEndDate()
         {
-            GivenGetBudgets(new List<Tuple<int, int, int>> {
-                Tuple.Create<int,int,int>(2018,6 ,300),
-                Tuple.Create<int,int,int>(2020,2,290)
+            GivenGetBudgets(new List<Budget> {
+                new Budget(){ Year= 2018, Month= 6, Amount= 300 },
+                new Budget(){ Year= 2020, Month= 2, Amount= 290 }
             });
 
             ActCalculate(new DateTime(2020, 6, 3), new DateTime(2018, 2, 2));
