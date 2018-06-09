@@ -6,18 +6,15 @@ using System.Threading.Tasks;
 
 namespace BudgetCalculator
 {
-    public class Buget
+    public class Budget
     {
         public int Year { get; set; }
 
         public int Month { get; set; }
 
-        public int Money { get; set; }
+        public int Amount { get; set; }
 
-        public int dayOfMonth()
-        {
-            return this.Money /
+        public int DayOfMonthMoney => this.Amount /
                    (DateTime.DaysInMonth(this.Year, this.Month));
-        }
     }
 }
