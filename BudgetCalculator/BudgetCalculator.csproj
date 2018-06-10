@@ -59,8 +59,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Buget.cs" />
-    <Compile Include="BugetService.cs" />
+    <Compile Include="Budget.cs" />
+    <Compile Include="BudgeProcessor.cs" />
+    <Compile Include="BudgetSearcher.cs" />
+    <Compile Include="BudgetRetriver.cs" />
+    <Compile Include="IBudgetRepository.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
